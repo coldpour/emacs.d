@@ -24,14 +24,62 @@
 (make-directory (file-name-directory custom-file) t)
 (load custom-file 'noerror 'nomessage)
 
+(require 'json)
+
+(defun my/npm-project-scripts ()
+  (let* ((root (locate-dominating-file default-directory "package.json"))
+         (package-json (and root (expand-file-name "package.json" root))))
+    (when (and package-json (file-readable-p package-json))
+      (condition-case nil
+          (with-temp-buffer
+            (insert-file-contents package-json)
+            (let* ((json-object-type 'alist)
+                   (json-array-type 'list)
+                   (json-key-type 'string)
+                   (data (json-read))
+                   (scripts (alist-get "scripts" data nil nil #'string=)))
+              (and (listp scripts) scripts)))
+        (error nil)))))
+
+(defun my/js-package-manager ()
+  (let ((root (locate-dominating-file default-directory "package.json")))
+    (cond
+     ((not root) nil)
+     ((file-exists-p (expand-file-name "pnpm-lock.yaml" root)) 'pnpm)
+     ((file-exists-p (expand-file-name "yarn.lock" root)) 'yarn)
+     ((or (file-exists-p (expand-file-name "package-lock.json" root))
+          (file-exists-p (expand-file-name "npm-shrinkwrap.json" root)))
+      'npm)
+     (t 'npm))))
+
+(defun my/js-run-script-command (script)
+  (pcase (my/js-package-manager)
+    ('pnpm (format "pnpm %s" script))
+    ('yarn (format "yarn %s" script))
+    (_ (format "npm run %s" script))))
+
+(defun my/npm-default-compile-command ()
+  (let ((scripts (my/npm-project-scripts)))
+    (cond
+     ((assoc "dev" scripts) (my/js-run-script-command "dev"))
+     ((assoc "start" scripts) (my/js-run-script-command "start"))
+     ((assoc "build" scripts) (my/js-run-script-command "build"))
+     ((assoc "test" scripts) (my/js-run-script-command "test")))))
+
 (defun my/set-js-project-compile-command ()
   (when (and (project-current nil)
-             (not (local-variable-p 'compile-command))
-             (locate-dominating-file default-directory "package.json"))
-    (setq-local compile-command "npm run dev")))
+             (not (local-variable-p 'compile-command)))
+    (let ((cmd (my/npm-default-compile-command)))
+      (when cmd
+        (setq-local compile-command cmd)))))
 
 (add-hook 'hack-local-variables-hook #'my/set-js-project-compile-command)
 (setq project-compilation-buffer-name-function #'project-prefixed-buffer-name)
+
+(defun my/maybe-enable-npm-mode ()
+  (when (and default-directory
+             (locate-dominating-file default-directory "package.json"))
+    (npm-mode 1)))
 
 (column-number-mode)
 (global-display-line-numbers-mode t)
@@ -59,6 +107,10 @@
   (dolist (var '("PATH" "MANPATH" "NVM_DIR" "NVM_BIN"))
     (add-to-list 'exec-path-from-shell-variables var))
   (exec-path-from-shell-initialize))
+
+(use-package npm-mode
+  :hook ((find-file . my/maybe-enable-npm-mode)
+         (dired-mode . my/maybe-enable-npm-mode)))
 
 (use-package magit
   :bind (("C-x g" . magit-status)))
