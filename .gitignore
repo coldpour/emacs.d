@@ -1,0 +1,44 @@
+# macOS / editor temp files
+.DS_Store
+*~
+\#*\#
+.\#*
+
+# Emacs bytecode and native compilation output
+*.elc
+eln-cache/
+
+# Package manager downloads/builds (rebuild on each machine)
+elpa/
+straight/
+
+# Emacs runtime state / caches
+.cache/
+auto-save-list/
+eshell/
+tramp
+url/
+bookmarks
+history
+places
+projectile-bookmarks.eld
+projects
+recentf
+savehist
+session.*
+network-security.data
+
+# Server/socket files
+server/
+emacs
+
+# Per-machine/local config (safe place for secrets and customizations)
+local/
+*.local.el
+secrets.el
+private.el
+
+# Common credential files
+.authinfo
+.authinfo.gpg
+.netrc
