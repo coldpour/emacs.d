@@ -112,5 +112,11 @@
   :hook ((find-file . my/maybe-enable-npm-mode)
          (dired-mode . my/maybe-enable-npm-mode)))
 
+(use-package markdown-mode
+  :hook (markdown-mode . visual-line-mode))
+
+(use-package adaptive-wrap
+  :hook (markdown-mode . adaptive-wrap-prefix-mode))
+
 (use-package magit
   :bind (("C-x g" . magit-status)))
