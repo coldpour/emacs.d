@@ -118,5 +118,45 @@
 (use-package adaptive-wrap
   :hook (markdown-mode . adaptive-wrap-prefix-mode))
 
+(require 'color)
+
+(defun my/markdown-refresh-code-block-faces (&rest _)
+  (let* ((default-bg (face-background 'default nil t))
+         (bg-mode (frame-parameter nil 'background-mode))
+         (code-bg (and default-bg
+                       (if (eq bg-mode 'dark)
+                           (ignore-errors (color-lighten-name default-bg 8))
+                         (ignore-errors (color-darken-name default-bg 6))))))
+    (custom-set-faces
+     `(markdown-code-face ((t (:inherit (fixed-pitch shadow)))))
+     `(markdown-pre-face
+       ((t (:inherit (fixed-pitch default)
+                     ,@(when code-bg (list :background code-bg)))))))))
+
+(add-hook 'markdown-mode-hook #'my/markdown-refresh-code-block-faces)
+(advice-add 'load-theme :after #'my/markdown-refresh-code-block-faces)
+
+(defun my/magit-refresh-diff-heading-faces (&rest _)
+  (when (facep 'magit-diff-file-heading-highlight)
+    (let ((fg (face-foreground 'default nil t)))
+      (when fg
+        (set-face-attribute 'magit-diff-file-heading-highlight nil
+                            :foreground fg
+                            :weight 'bold)))))
+
+(with-eval-after-load 'magit-diff
+  (my/magit-refresh-diff-heading-faces))
+(advice-add 'load-theme :after #'my/magit-refresh-diff-heading-faces)
+
+(use-package modus-themes
+  :ensure nil
+  :defer t)
+
+(use-package spacemacs-theme
+  :defer t)
+
+(use-package doom-themes
+  :defer t)
+
 (use-package magit
   :bind (("C-x g" . magit-status)))
