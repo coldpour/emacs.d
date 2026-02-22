@@ -42,3 +42,4 @@ private.el
 .authinfo
 .authinfo.gpg
 .netrc
+/transient/
