@@ -31,6 +31,7 @@
     (setq-local compile-command "npm run dev")))
 
 (add-hook 'hack-local-variables-hook #'my/set-js-project-compile-command)
+(setq project-compilation-buffer-name-function #'project-prefixed-buffer-name)
 
 (column-number-mode)
 (global-display-line-numbers-mode t)
