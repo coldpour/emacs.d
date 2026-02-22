@@ -162,3 +162,5 @@
   :bind (("C-x g" . magit-status)))
 
 (load-theme 'spacemacs-dark t)
+(set-face-attribute 'default nil :height 160)
+
