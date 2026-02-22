@@ -24,6 +24,14 @@
 (make-directory (file-name-directory custom-file) t)
 (load custom-file 'noerror 'nomessage)
 
+(defun my/set-js-project-compile-command ()
+  (when (and (project-current nil)
+             (not (local-variable-p 'compile-command))
+             (locate-dominating-file default-directory "package.json"))
+    (setq-local compile-command "npm run dev")))
+
+(add-hook 'hack-local-variables-hook #'my/set-js-project-compile-command)
+
 (column-number-mode)
 (global-display-line-numbers-mode t)
 
@@ -43,6 +51,13 @@
 
 (use-package helpful
   :ensure t)
+
+(use-package exec-path-from-shell
+  :if (memq window-system '(mac ns x))
+  :config
+  (dolist (var '("PATH" "MANPATH" "NVM_DIR" "NVM_BIN"))
+    (add-to-list 'exec-path-from-shell-variables var))
+  (exec-path-from-shell-initialize))
 
 (use-package magit
   :bind (("C-x g" . magit-status)))
